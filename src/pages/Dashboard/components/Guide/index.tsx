@@ -3,7 +3,7 @@
  * @Author: Pony
  * @Date: 2021-08-21 22:20:26
  * @LastEditors: Pony
- * @LastEditTime: 2021-08-22 01:35:56
+ * @LastEditTime: 2021-08-22 12:13:56
  * @FilePath: /iceAdmin/src/pages/Dashboard/components/Guide/index.tsx
  */
 import React, { useState } from 'react';
@@ -41,11 +41,13 @@ const Guide = () => {
   }
   const checkRange = (fieldObj, val) => {
     const { field, validator } = fieldObj;
+   
     if (field) {
      let fieldArray = field.split('_');
      let date = val.format("HH:mm:ss");
      let str = fieldArray[0];
      let index = fieldArray[1];
+     console.log(val.format("HH:mm:ss"), index)
       if (str == 'startTime') {
         // 第一步验证当前行的的开始时间小于结束时间
         let notPass = false;
@@ -53,25 +55,28 @@ const Guide = () => {
         if (endTime) {
           date >= endTime && (notPass = true)
         } 
-  
+       
         if (notPass) {
           return Promise.reject(new Error('开始时间不能大于结束时间!'));
-        }
+        } 
         // 第二步遍历所有的时间数组的每一项是否存在 和这个值相同的时间
         let isRepeat = false;
+       
         baseTimeArr.map((i, rowIndex) => {
-          // 除了当前项的开始时间
-          if (rowIndex == index) {
-            i['endTime'] === date && (isRepeat = true);
-          }
           if (rowIndex != index) {
-            i['startTime'] === date && (isRepeat = true);
-            i['endTime'] === date && (isRepeat = true);
+            console.log(date >= i['startTime'] , date < i['endTime'])
+            // i['startTime'] === date && (isRepeat = true);
+            // i['endTime'] === date && (isRepeat = true);
+            date >= i['startTime'] && date < i['endTime'] && (isRepeat = true)
+            // 当行的endTime 需要判断 这个startTime是否在是否大于等于end
+            endTime && endTime > i['endTime'] && date < i['endTime'] && (isRepeat = true)
           }  
         })
         if (isRepeat) {
-          return Promise.reject(new Error('开始时间存在重复!'));
-        } 
+          return Promise.reject(new Error('时间段存在重复!'));
+        } else {
+          return Promise.resolve();
+        }
       }
       if (str == 'endTime') {
         // 第一步验证当前行的的开始时间小于结束时间
@@ -83,28 +88,23 @@ const Guide = () => {
         }
         if (notPass) {
           return Promise.reject(new Error('结束时间不能小于开始时间!'));
-        }
+        } 
         let isRepeat = false; // 是否重复
         baseTimeArr.map((i, rowIndex) => {
-          // 除了当前项的开始时间
-          if (rowIndex == index) {
-            i['startTime'] === date && (isRepeat = true);
-          }
           if (rowIndex != index) {
-            i['startTime'] === date && (isRepeat = true);
-            i['endTime'] === date && (isRepeat = true);
+            date > i['startTime'] && date <= i['endTime'] && (isRepeat = true)
+            // 当开始时间选完 小于一个时间段的开始时间 结束时间就必须要小于等于上一个开始时间
+            startTime && startTime < i['startTime'] && date > i['startTime'] && (isRepeat = true)
           }
         })
         if (isRepeat) {
-          return Promise.reject(new Error('结束时间存在重复!'));
-        } 
-  
-        return Promise.resolve();
+          return Promise.reject(new Error('时间段存在重复!'));
+        } else {
+          return Promise.resolve();
+        }
+        
       }
     }
-  }
-  const checkAllData = (date, str, index) => {
-    
   }
   return (
     <div className={styles.container}>
@@ -125,7 +125,7 @@ const Guide = () => {
                       required 
                       label="" 
                       colon={false}
-                      requiredTrigger="onBlur"
+                     
                       validator={checkRange}
                       autoValidate={true}
                     >
@@ -144,7 +144,7 @@ const Guide = () => {
                        required 
                        label="" 
                        colon={false} 
-                       requiredTrigger="onBlur"
+                      
                        validator={checkRange}
                        autoValidate={true}
                       >
